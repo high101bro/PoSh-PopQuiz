@@ -8,9 +8,8 @@ $AllCommands = $ModulesThatAreCurrentlyImported.ExportedCommands.Values.Name
 $Sources     = $ModulesThatAreCurrentlyImported.ExportedCommands.Values.Source | Sort-Object -Unique
 
 $script:CurrentQuestion     = ''
-$script:CurrentButton       = ''
-$script:CurrentQuestionList = ''
-$script:Answers             = @{}
+$script:CurrentButton       =''
+$script:CurrentQuestionList =''
 
 function Generate-PopQuiz {
     param(
@@ -18,7 +17,7 @@ function Generate-PopQuiz {
         [string[]]$ModuleName
     )
     $script:PopQuizAnswerTextBox.Text  = ''
-    $script:PopQuizAnswerSubmittedTextBox.Text = ''
+    $PopQuizAnswerSubmittedTextBox.Text = ''
 
     $script:PopQuizPool = @()
     foreach ($Module in $ModuleName){
@@ -27,104 +26,133 @@ function Generate-PopQuiz {
     $script:PopQuizPool = $script:PopQuizPool | Sort-Object {Get-Random} | Where-Object {$_ -ne '' -or $_ -ne $null} | Select-Object -First 50
     #$script:PopQuizPool | ogv
 
-
     $script:TotalNumberOfCommands = $script:PopQuizPool.Count
     #$script:RandomNumber = Get-Random -Minimum 0 -Maximum $script:TotalNumberOfCommands 
 
+
+    # List of Cmdlets that contains hashtables of all their formated Questions, Answers, RandomQuestions, Hints, etc...
+    $SelectedPopQuizQuestionsList = @()
 
     $script:InCrementQ = 0
     $script:IncrementX = 2
     $script:IncrementY = 0
     foreach ($q in $script:PopQuizPool) {
         $script:Question = $q
+
         # Creates the question buttons at the lower left of the GUI
         $script:InCrementQ += 1
         Invoke-Expression @"
 
-        `$script:HintCount = 0
-        `$script:Question$($script:InCrementQ)Hint = @()
-        `$script:NoMoreHints = `$false
-        `$CmdletHelp = Get-Help `$script:Question
+        ### Creates a hashtable/dictionary to store commandd question information
+        `$script:Question$($script:InCrementQ)HashTable = @{}
 
+        ### Cmdlet Help
+        `$script:Question$($script:InCrementQ)HashTable.add('CmdletHelp',`$(Get-Help `$script:Question))
+            #`$CmdletHelp = Get-Help `$script:Question
 
-            `$CmdletModule = `$script:Question | Select-Object -ExpandProperty Source
-            `$script:Question$($script:InCrementQ)Hint += `@"
-        Module = `$(`$CmdletModule.trim("`r`n"))
-`"@
-    
-            # Adds Hint for syntax
-            `$CmdletSyntax = `$CmdletHelp.Syntax
-            `$CmdletSyntax = (`$CmdletSyntax | Out-String).Replace("`$script:Question",'     VERB-NOUN').Replace("`r`n`r`n","???").Replace("`r`n","").Replace("???","`r`n`r`n").Trim("`r`n")
-            `$script:Question$($script:InCrementQ)Hint += `$CmdletSyntax.trim("`r`n")
+        ### Question
+        `$script:Question$($script:InCrementQ)HashTable.add('Question',`@"
+        Which `$(`$script:Question.CommandType) does the following?
+            `$(Get-Help "`$PopQuizQuestion" | Select-Object -ExpandProperty Synopsis)
+        `"@)
+                        `$PopQuizQuestionRichTextBox.Text = `$script:Question$($script:InCrementQ)HashTable.Question
+        ### Answer
+        `$script:Question$($script:InCrementQ)HashTable.add('Answer',`$script:Question)
         
-            # Adds Hint for VERB
-            if ("`$script:Question" -match "\-"){
-                `$script:Question$($script:InCrementQ)Hint += `@"
+        ### Hint Count
+        `$script:Question$($script:InCrementQ)HashTable.add('HintCount',0)
+            #`$script:HintCount = 0
+
+        ### No More Hints
+        `$script:Question$($script:InCrementQ)HashTable.add('NoMoreHints',`$false)
+            #`$script:NoMoreHints = `$false
+        
+        ### Hint list
+        `$script:Question$($script:InCrementQ)HashTable.add('Hints',@())
+            #`$script:Question$($script:InCrementQ)Hint = @()
+        
+                # Adds Hint for Module
+                `$CmdletModule = `$script:Question | Select-Object -ExpandProperty Source
+                `$script:Question$($script:InCrementQ)HashTable.Hints += `@"
+       Module = `$(`$CmdletModule.trim("`r`n"))
+`"@
+            
+                # Adds Hint for syntax
+                `$CmdletSyntax = `$CmdletHelp.Syntax
+                `$CmdletSyntax = (`$CmdletSyntax | Out-String).Replace("`$script:Question",'     VERB-NOUN').Replace("`r`n`r`n","???").Replace("`r`n","").Replace("???","`r`n`r`n").Trim("`r`n")
+                `$script:Question$($script:InCrementQ)HashTable.Hints += `$CmdletSyntax.trim("`r`n")
+    
+                # Adds Hint for VERB
+                if ("`$script:Question" -match "\-"){
+                    `$script:Question$($script:InCrementQ)HashTable.Hints += `@"
         Cmdlet Verb = `$((`$script:Question -split '-')[0])
 `"@
-            }
+                }
     
-            # Adds Hint for description
-            if (`$(`$script:Question.Description) -ne ''){
-                `$CmdletDescription = `$CmdletHelp.Description
-                `$CmdletDescription = (`$CmdletDescription | Out-String).Replace("`$script:Question",'VERB-NOUN').Replace("`r`n`r`n","???").Replace("`r`n","").Trim("`r`n").Trim("?").Replace("???","`r`n`r`n     ")
-            `$script:Question$($script:InCrementQ)Hint += `@"
+                # Adds Hint for description
+                if (`$(`$script:Question.Description) -ne ''){
+                    `$CmdletDescription = `$CmdletHelp.Description
+                    `$CmdletDescription = (`$CmdletDescription | Out-String).Replace("`$script:Question",'VERB-NOUN').Replace("`r`n`r`n","???").Replace("`r`n","").Trim("`r`n").Trim("?").Replace("???","`r`n`r`n     ")
+                    `$script:Question$($script:InCrementQ)HashTable.Hints += `@"
     `$(`$CmdletDescription.trim("`r`n"))
 `"@
-            }
+        }
     
-        # Adds Hint for examples - one hint for each example 
-        `$CmdletExamples = `$CmdletHelp.Examples
-        `$Separator = 'Example \d. '
-        `$CmdletExamples = (`$CmdletExamples | Out-String) -split `$Separator
-        `$ExampleCount = 1
-        foreach (`$Example in `$(`$CmdletExamples | Select-Object -Skip 1) ){
-            `$Example = (`$Example | Out-String).Replace("`$script:Question",'VERB-NOUN')
-            `$script:Question$($script:InCrementQ)Hint += `@"
+                # Adds Hint for examples - one hint for each example 
+                `$CmdletExamples = `$CmdletHelp.Examples
+                `$Separator = 'Example \d. '
+                `$CmdletExamples = (`$CmdletExamples | Out-String) -split `$Separator
+                `$ExampleCount = 1
+                foreach (`$Example in `$(`$CmdletExamples | Select-Object -Skip 1) ){
+                    `$Example = (`$Example | Out-String).Replace("`$script:Question",'VERB-NOUN')
+                    `$script:Question$($script:InCrementQ)HashTable.Hints += `@"
     Example: `$ExampleCount
     `$(`$Example.trim("`r`n").Replace("`$script:Question",'VERB-NOUN'))
 `"@
-            `$ExampleCount += 1
-        }
+                    `$ExampleCount += 1
+                }
     
-        # Adds Hint for Parameters
-        `$CmdletParameters = `$CmdletHelp.Parameters
-        `$CmdletParameters = (`$CmdletParameters | Out-String).Replace("`$script:Question",'VERB-NOUN').Replace("`r`n`r`n","`r`n")
-        `$script:Question$($script:InCrementQ)Hint += `@"
+                # Adds Hint for Parameters
+                `$CmdletParameters = `$CmdletHelp.Parameters
+                `$CmdletParameters = (`$CmdletParameters | Out-String).Replace("`$script:Question",'VERB-NOUN').Replace("`r`n`r`n","`r`n")
+                `$script:Question$($script:InCrementQ)HashTable.Hints += `@"
     `$(`$CmdletParameters.trim("`r`n"))
 `"@
 
+#----------------
 
-    # Unchecks all multiple choice radio buttons
-    `$script:PopQuizMultipleChoice1RadioButton.Checked = `$False
-    `$script:PopQuizMultipleChoice2RadioButton.Checked = `$False
-    `$script:PopQuizMultipleChoice3RadioButton.Checked = `$False
-    `$script:PopQuizMultipleChoice4RadioButton.Checked = `$False
-    `$script:PopQuizMultipleChoice5RadioButton.Checked = `$False
-    `$script:PopQuizMultipleChoice6RadioButton.Checked = `$False
+        `$Script:RandomQuestionList = @(
+            "`$(`$script:PopQuizPool[`$(Get-Random -Minimum 0 -Maximum `$script:PopQuizPool.Count)])",
+            "`$(`$script:PopQuizPool[`$(Get-Random -Minimum 0 -Maximum `$script:PopQuizPool.Count)])",
+            "`$(`$script:PopQuizPool[`$(Get-Random -Minimum 0 -Maximum `$script:PopQuizPool.Count)])",
+            "`$(`$script:PopQuizPool[`$(Get-Random -Minimum 0 -Maximum `$script:PopQuizPool.Count)])",
+            "`$(`$script:PopQuizPool[`$(Get-Random -Minimum 0 -Maximum `$script:PopQuizPool.Count)])",
+            "`$(`$script:PopQuizPool[`$(Get-Random -Minimum 0 -Maximum `$script:PopQuizPool.Count)])"
+        )
+        `$script:Question$($script:InCrementQ)HashTable.Add('RandomQuestions',`$Script:RandomQuestionList)
+
+        # Unchecks all multiple choice radio buttons
+        `$script:PopQuizMultipleChoice1RadioButton.Checked = `$False
+        `$script:PopQuizMultipleChoice2RadioButton.Checked = `$False
+        `$script:PopQuizMultipleChoice3RadioButton.Checked = `$False
+        `$script:PopQuizMultipleChoice4RadioButton.Checked = `$False
+        `$script:PopQuizMultipleChoice5RadioButton.Checked = `$False
+        `$script:PopQuizMultipleChoice6RadioButton.Checked = `$False
+
+        # Sets at the multiple choice questions to default, where the text is masked
+        `$script:PopQuizMultipleChoice1RadioButton.Text = "Question 1"
+        `$script:PopQuizMultipleChoice2RadioButton.Text = "Question 2"
+        `$script:PopQuizMultipleChoice3RadioButton.Text = "Question 3"
+        `$script:PopQuizMultipleChoice4RadioButton.Text = "Question 4"
+        `$script:PopQuizMultipleChoice5RadioButton.Text = "Question 5"
+        `$script:PopQuizMultipleChoice6RadioButton.Text = "Question 6"
+
+        `$PoShPopQuiz.Refresh()
 
 
-    `$Script:RandomQuestion$($script:InCrementQ)List = @(
-        "`$(`$script:PopQuizPool[`$(Get-Random -Minimum 0 -Maximum `$script:PopQuizPool.Count)])",
-        "`$(`$script:PopQuizPool[`$(Get-Random -Minimum 0 -Maximum `$script:PopQuizPool.Count)])",
-        "`$(`$script:PopQuizPool[`$(Get-Random -Minimum 0 -Maximum `$script:PopQuizPool.Count)])",
-        "`$(`$script:PopQuizPool[`$(Get-Random -Minimum 0 -Maximum `$script:PopQuizPool.Count)])",
-        "`$(`$script:PopQuizPool[`$(Get-Random -Minimum 0 -Maximum `$script:PopQuizPool.Count)])",
-        "`$(`$script:PopQuizPool[`$(Get-Random -Minimum 0 -Maximum `$script:PopQuizPool.Count)])"
-    )
-
-    `$script:PopQuizMultipleChoice1RadioButton.Text = "Question 1"
-    `$script:PopQuizMultipleChoice2RadioButton.Text = "Question 2"
-    `$script:PopQuizMultipleChoice3RadioButton.Text = "Question 3"
-    `$script:PopQuizMultipleChoice4RadioButton.Text = "Question 4"
-    `$script:PopQuizMultipleChoice5RadioButton.Text = "Question 5"
-    `$script:PopQuizMultipleChoice6RadioButton.Text = "Question 6"
-
-    `$PoShPopQuiz.Refresh()
 
 
-
-        # Generates Question buttons
+        #### Generates Question buttons
         `$Status$($script:InCrementQ)Button = New-Object -TypeName System.Windows.Forms.Button -Property @{
             Text = "$script:InCrementQ"
             Location = @{ X = 10 + `$script:IncrementX
@@ -134,15 +162,10 @@ function Generate-PopQuiz {
             Font = New-Object System.Drawing.Font("Courier New",10,0,0,0)
             UseVisualStyleBackColor = `$true
             Add_Click = {
-                `$script:PopQuizAnswerTextBox.focus()
-
-                `$script:CurrentQuestion  = `$script:PopQuizPool[$script:InCrementQ - 1]
-                `$script:CurrentAnswerNum = "Answer$($script:InCrementQ)"
-                `$script:CurrentButton    = `$This
-
-                `$script:PopQuizAnswerSubmittedTextBox.Text = `$script:Answers[`$script:CurrentAnswerNum]
-
-                `$script:CurrentQuestionList = `$Script:RandomQuestion$($script:InCrementQ)List
+                `$script:CurrentQuestion = `$SelectedPopQuizQuestionsList[$script:InCrementQ - 1]
+                `$script:CurrentButton   = `$This
+                ###############################`$script:Question$($script:InCrementQ)HashTable
+                `$script:CurrentQuestionList = `$Script:RandomQuestion$($script:InCrementQ)List             
                 `$script:CurrentQuestionList[$(Get-Random -Minimum 0 -Maximum 6)] = `$script:CurrentQuestion
 
                 `$script:NoMoreHints = `$false
@@ -150,33 +173,30 @@ function Generate-PopQuiz {
                 `$script:HintCount   = 0
 
                 `$QuestionPointValueLabel.Text = `$(2).ToString('0.0')
-                `$PopQuizAnswerGroupBox.Text = "Manual Answer: #$script:InCrementQ"
-                                
+                `$PopQuizAnswerGroupBox.Text = "Manual Answer: $script:InCrementQ"
+                `$script:PopQuizMultipleChoiceCheckBox.Text = "Multiple Choice: #$script:InCrementQ"
+
                 `$script:PopQuizAnswerTextBox.text = ''
                 `$PopQuizQuestion = `$script:PopQuizPool[$script:InCrementQ - 1]
-                `$PopQuizQuestionRichTextBox.Text = `@"
-Which `$(`$script:Question.CommandType) does the following?
-    `$(Get-Help "`$PopQuizQuestion" | Select-Object -ExpandProperty Synopsis)
-`"@
 
-                `$script:PopQuizMultipleChoiceCheckBox.Text = "Multiple Choice: #$script:InCrementQ"
-                if (`$PopQuizMultipleChoiceStayCheckCheckBox.checked) {
-                    `$script:PopQuizMultipleChoiceCheckBox.checked     = `$true
-                }
-                else {
-                    #`$script:PopQuizAnswerSubmittedTextBox.Text = ''
-                    `$script:PopQuizMultipleChoiceCheckBox.checked     = `$false
-                }
+                `$PopQuizQuestionRichTextBox.Text = `$script:Question$($script:InCrementQ)HashTable.Question
+                
+                Update-MultipleChoice
+
+                `$PopQuizAnswerSubmittedTextBox.Text = ''
+                `$script:PopQuizMultipleChoiceCheckBox.checked     = `$false
                 `$script:PopQuizMultipleChoice1RadioButton.Checked = `$False
                 `$script:PopQuizMultipleChoice2RadioButton.Checked = `$False
                 `$script:PopQuizMultipleChoice3RadioButton.Checked = `$False
                 `$script:PopQuizMultipleChoice4RadioButton.Checked = `$False
                 `$script:PopQuizMultipleChoice5RadioButton.Checked = `$False
-                `$script:PopQuizMultipleChoice6RadioButton.Checked = `$False
-
-                Update-MultipleChoice
+                `$script:PopQuizMultipleChoice6RadioButton.Checked = `$False    
             }
         }
+
+        # Adds the populated question hashtable to the question list
+        `$SelectedPopQuizQuestionsList += `$script:Question$($script:InCrementQ)HashTable
+
         `$StatusGroupBox.Controls.Remove(`$Status$($script:InCrementQ)Button)
         `$StatusGroupBox.Controls.Add(`$Status$($script:InCrementQ)Button)
         `$script:IncrementX += 32
@@ -186,28 +206,29 @@ Which `$(`$script:Question.CommandType) does the following?
             $script:IncrementX = 2
             $script:IncrementY += 28
         }
+
+
+
+
         # Sets the startup/initial questions as the first button/question
         $script:CurrentButton = $Status1Button
-    }  
+    }
+    
+    
     
     $script:CurrentQuestion     = $script:PopQuizPool[0]
     $script:CurrentQuestionList = $Script:RandomQuestion1List
 
-    $script:CurrentQuestionList[$(Get-Random -Minimum 0 -Maximum 6)] = $script:CurrentQuestion
+    $script:CurrentQuestionList[$(Get-Random -Minimum 1 -Maximum 7)] = $script:CurrentQuestion
 
     $script:CurrentHint         = $script:Question1Hint
     $script:HintCount           = 0
-    $script:CurrentAnswerNum    = 'Answer1'
     $QuestionPointValueLabel.Text = $(2).ToString('0.0')
     $PopQuizAnswerGroupBox.Text = "Manual Answer: #1"
     $script:PopQuizMultipleChoiceCheckBox.Text = "Multiple Choice: #1"
 
-    $script:PopQuizQuestions | ogv
     
-    $PopQuizQuestionRichTextBox.Text = @"
-Which $($script:Question.CommandType) does the following?
-    $(Get-Help "$script:CurrentQuestion" | Select-Object -ExpandProperty Synopsis)
-"@
+    $PopQuizQuestionRichTextBox.Text = $script:Question1Hash.Question
 }
 
 
@@ -383,26 +404,26 @@ $PoShPopQuiz.Controls.Add($PopQuizAnswerGroupBox)
 
 function Submit-ManualEntryAnswer {
     if ($script:PopQuizAnswerTextBox.Text -eq ''){
-        $script:Answers.Set_Item($script:CurrentAnswerNum,'')
-        $script:CurrentAnswer = $script:Answers[$script:CurrentAnswerNum]
-        $script:PopQuizAnswerSubmittedTextBox.Text = $script:CurrentAnswer
         $script:CurrentButton.ResetBackColor()
     }
     else {
-        $script:Answers.Set_Item($script:CurrentAnswerNum,$script:PopQuizAnswerTextBox.text)
-        $script:CurrentAnswer = $script:Answers[$script:CurrentAnswerNum]
-        $script:PopQuizAnswerSubmittedTextBox.Text = $script:CurrentAnswer
+        #if ($script:PopQuizAnswerTextBox.Text -eq $script:CurrentQuestion) {
+        #    $PopQuizAnswerSubmittedTextBox.Text = 'Correct'
+        #}
+        #else {
+        #    $PopQuizAnswerSubmittedTextBox.Text = 'Wrong'
+        #}    
+        $PopQuizAnswerSubmittedTextBox.Text = $script:PopQuizAnswerTextBox.Text
         $script:CurrentButton.BackColor = 'LightBlue'
     }
 }
 
 
 $script:PopQuizAnswerTextBox = New-Object -TypeName System.Windows.Forms.TextBox -Property @{
-    Location = @{ X = 10
+    Location = @{ X = 10 
                   Y = 20 }
     Size     = @{ Width  = 225
                   Height = 22 }
-    TabIndex = 0
     Add_KeyDown = { if ($_.KeyCode -eq "Enter") { Submit-ManualEntryAnswer } }
     AutoCompleteSource = "CustomSource"
     AutoCompleteMode   = "SuggestAppend"
@@ -447,14 +468,14 @@ $PoShPopQuiz.Controls.Add($PopQuizAnswerSubmittedGroupBox)
 
 
 
-$script:PopQuizAnswerSubmittedTextBox = New-Object -TypeName System.Windows.Forms.TextBox -Property @{
+$PopQuizAnswerSubmittedTextBox = New-Object -TypeName System.Windows.Forms.RichTextBox -Property @{
     Location = @{ X = 10
                   Y = 20 }
     Size     = @{ Width  = 300
                   Height = 22 }
     ReadOnly = $True
 }
-$PopQuizAnswerSubmittedGroupBox.Controls.Add($script:PopQuizAnswerSubmittedTextBox)
+$PopQuizAnswerSubmittedGroupBox.Controls.Add($PopQuizAnswerSubmittedTextBox)
 
 
 
@@ -509,26 +530,9 @@ $script:PopQuizMultipleChoiceCheckBox = New-Object -TypeName System.Windows.Form
                   Y = $PopQuizAnswerGroupBox.Location.Y + $PopQuizAnswerGroupBox.Size.Height + 1 }
     Size     = @{ Width  = 130
                   Height = 22 }
-    Add_Click = { 
-        if ($This.Checked -eq $false) { $PopQuizMultipleChoiceStayCheckCheckBox.checked = $false }
-        Update-MultipleChoice 
-    }
+    Add_Click = { Update-MultipleChoice }
 }
 $PoShPopQuiz.Controls.Add($script:PopQuizMultipleChoiceCheckBox)
-
-
-$PopQuizMultipleChoiceStayCheckCheckBox = New-Object -TypeName System.Windows.Forms.CheckBox -Property @{
-    Text = "Stay Checked"
-    Location = @{ X = $PopQuizMultipleChoiceCheckBox.Location.X + $PopQuizMultipleChoiceCheckBox.Size.Width + 105
-                  Y = $PopQuizMultipleChoiceCheckBox.Location.Y }
-    Size     = @{ Width  = 95
-                  Height = 22 }
-    Add_Click = { 
-        if ($This.checked) {$script:PopQuizMultipleChoiceCheckBox.checked = $true}
-        Update-MultipleChoice 
-    }
-}
-$PoShPopQuiz.Controls.Add($PopQuizMultipleChoiceStayCheckCheckBox)
 
 
 
@@ -542,55 +546,31 @@ $PoShPopQuiz.Controls.Add($script:PopQuizMultipleChoiceGroupBox)
 
 
 function Submit-MultipleChoiceAnswer {
-    if     ( $script:PopQuizMultipleChoice1RadioButton.checked -and $script:PopQuizMultipleChoice1RadioButton.Text -eq $script:CurrentQuestion) { $script:PopQuizAnswerSubmittedTextBox.Text = 'Correct' ; $script:CurrentButton.ResetBackColor() }
-    elseif ( $script:PopQuizMultipleChoice2RadioButton.checked -and $script:PopQuizMultipleChoice2RadioButton.Text -eq $script:CurrentQuestion) { $script:PopQuizAnswerSubmittedTextBox.Text = 'Correct' ; $script:CurrentButton.ResetBackColor() }
-    elseif ( $script:PopQuizMultipleChoice3RadioButton.checked -and $script:PopQuizMultipleChoice3RadioButton.Text -eq $script:CurrentQuestion) { $script:PopQuizAnswerSubmittedTextBox.Text = 'Correct' ; $script:CurrentButton.ResetBackColor() }
-    elseif ( $script:PopQuizMultipleChoice4RadioButton.checked -and $script:PopQuizMultipleChoice4RadioButton.Text -eq $script:CurrentQuestion) { $script:PopQuizAnswerSubmittedTextBox.Text = 'Correct' ; $script:CurrentButton.ResetBackColor() }
-    elseif ( $script:PopQuizMultipleChoice5RadioButton.checked -and $script:PopQuizMultipleChoice5RadioButton.Text -eq $script:CurrentQuestion) { $script:PopQuizAnswerSubmittedTextBox.Text = 'Correct' ; $script:CurrentButton.ResetBackColor() }
-    elseif ( $script:PopQuizMultipleChoice6RadioButton.checked -and $script:PopQuizMultipleChoice6RadioButton.Text -eq $script:CurrentQuestion) { $script:PopQuizAnswerSubmittedTextBox.Text = 'Correct' ; $script:CurrentButton.ResetBackColor() }
+    if     ( $script:PopQuizMultipleChoice1RadioButton.checked -and $script:PopQuizMultipleChoice1RadioButton.Text -eq $script:CurrentQuestion) { $PopQuizAnswerSubmittedTextBox.Text = 'Correct' ; $script:CurrentButton.ResetBackColor() }
+    elseif ( $script:PopQuizMultipleChoice2RadioButton.checked -and $script:PopQuizMultipleChoice2RadioButton.Text -eq $script:CurrentQuestion) { $PopQuizAnswerSubmittedTextBox.Text = 'Correct' ; $script:CurrentButton.ResetBackColor() }
+    elseif ( $script:PopQuizMultipleChoice3RadioButton.checked -and $script:PopQuizMultipleChoice3RadioButton.Text -eq $script:CurrentQuestion) { $PopQuizAnswerSubmittedTextBox.Text = 'Correct' ; $script:CurrentButton.ResetBackColor() }
+    elseif ( $script:PopQuizMultipleChoice4RadioButton.checked -and $script:PopQuizMultipleChoice4RadioButton.Text -eq $script:CurrentQuestion) { $PopQuizAnswerSubmittedTextBox.Text = 'Correct' ; $script:CurrentButton.ResetBackColor() }
+    elseif ( $script:PopQuizMultipleChoice5RadioButton.checked -and $script:PopQuizMultipleChoice5RadioButton.Text -eq $script:CurrentQuestion) { $PopQuizAnswerSubmittedTextBox.Text = 'Correct' ; $script:CurrentButton.ResetBackColor() }
+    elseif ( $script:PopQuizMultipleChoice6RadioButton.checked -and $script:PopQuizMultipleChoice6RadioButton.Text -eq $script:CurrentQuestion) { $PopQuizAnswerSubmittedTextBox.Text = 'Correct' ; $script:CurrentButton.ResetBackColor() }
     elseif (!$script:PopQuizMultipleChoice1RadioButton.checked -and 
             !$script:PopQuizMultipleChoice2RadioButton.checked -and 
             !$script:PopQuizMultipleChoice3RadioButton.checked -and 
             !$script:PopQuizMultipleChoice4RadioButton.checked -and 
             !$script:PopQuizMultipleChoice5RadioButton.checked -and 
             !$script:PopQuizMultipleChoice6RadioButton.checked ) { 
-        $script:PopQuizAnswerSubmittedTextBox.Text = 'Nothing Selected'
+        $PopQuizAnswerSubmittedTextBox.Text = 'Nothing Selected'
         $script:CurrentButton.ResetBackColor()
     }
     else {
-        $script:PopQuizAnswerSubmittedTextBox.Text = 'Wrong'
+        $PopQuizAnswerSubmittedTextBox.Text = 'Wrong'
     }  
     $script:CurrentButton.BackColor = 'LightBlue'
-    if     ( $script:PopQuizMultipleChoice1RadioButton.checked) {
-        $script:Answers.Set_Item($script:CurrentAnswerNum,$script:PopQuizMultipleChoice1RadioButton.Text)
-        $script:CurrentAnswer = $script:Answers[$script:CurrentAnswerNum]
-        $script:PopQuizAnswerSubmittedTextBox.Text = $script:CurrentAnswer
-    }
-    elseif ( $script:PopQuizMultipleChoice2RadioButton.checked) { 
-        $script:Answers.Set_Item($script:CurrentAnswerNum,$script:PopQuizMultipleChoice2RadioButton.Text)
-        $script:CurrentAnswer = $script:Answers[$script:CurrentAnswerNum]
-        $script:PopQuizAnswerSubmittedTextBox.Text = $script:CurrentAnswer
-    }
-    elseif ( $script:PopQuizMultipleChoice3RadioButton.checked) { 
-        $script:Answers.Set_Item($script:CurrentAnswerNum,$script:PopQuizMultipleChoice3RadioButton.Text)
-        $script:CurrentAnswer = $script:Answers[$script:CurrentAnswerNum]
-        $script:PopQuizAnswerSubmittedTextBox.Text = $script:CurrentAnswer
-    }
-    elseif ( $script:PopQuizMultipleChoice4RadioButton.checked) { 
-        $script:Answers.Set_Item($script:CurrentAnswerNum,$script:PopQuizMultipleChoice4RadioButton.Text)
-        $script:CurrentAnswer = $script:Answers[$script:CurrentAnswerNum]
-        $script:PopQuizAnswerSubmittedTextBox.Text = $script:CurrentAnswer
-    }
-    elseif ( $script:PopQuizMultipleChoice5RadioButton.checked) { 
-        $script:Answers.Set_Item($script:CurrentAnswerNum,$script:PopQuizMultipleChoice5RadioButton.Text)
-        $script:CurrentAnswer = $script:Answers[$script:CurrentAnswerNum]
-        $script:PopQuizAnswerSubmittedTextBox.Text = $script:CurrentAnswer
-    }
-    elseif ( $script:PopQuizMultipleChoice6RadioButton.checked) { 
-        $script:Answers.Set_Item($script:CurrentAnswerNum,$script:PopQuizMultipleChoice6RadioButton.Text)
-        $script:CurrentAnswer = $script:Answers[$script:CurrentAnswerNum]
-        $script:PopQuizAnswerSubmittedTextBox.Text = $script:CurrentAnswer
-    }
+    if     ( $script:PopQuizMultipleChoice1RadioButton.checked) { $PopQuizAnswerSubmittedTextBox.Text = $script:PopQuizMultipleChoice1RadioButton.Text }
+    elseif ( $script:PopQuizMultipleChoice2RadioButton.checked) { $PopQuizAnswerSubmittedTextBox.Text = $script:PopQuizMultipleChoice2RadioButton.Text }
+    elseif ( $script:PopQuizMultipleChoice3RadioButton.checked) { $PopQuizAnswerSubmittedTextBox.Text = $script:PopQuizMultipleChoice3RadioButton.Text }
+    elseif ( $script:PopQuizMultipleChoice4RadioButton.checked) { $PopQuizAnswerSubmittedTextBox.Text = $script:PopQuizMultipleChoice4RadioButton.Text }
+    elseif ( $script:PopQuizMultipleChoice5RadioButton.checked) { $PopQuizAnswerSubmittedTextBox.Text = $script:PopQuizMultipleChoice5RadioButton.Text }
+    elseif ( $script:PopQuizMultipleChoice6RadioButton.checked) { $PopQuizAnswerSubmittedTextBox.Text = $script:PopQuizMultipleChoice6RadioButton.Text }
 }
 
 
