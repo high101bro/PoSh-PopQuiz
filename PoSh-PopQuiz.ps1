@@ -137,7 +137,6 @@ function Generate-PopQuiz {
     `$PoShPopQuiz.Refresh()
 
 
-
         # Generates Question buttons
         `$script:Status$($script:InCrementQ)Button = New-Object -TypeName System.Windows.Forms.Button -Property @{
             Text = "$script:InCrementQ"
@@ -149,6 +148,15 @@ function Generate-PopQuiz {
             ForeColor = 'Black'
             UseVisualStyleBackColor = `$true
             Add_Click = {
+
+                # if the button is selected, it will be different than the others
+                foreach (`$num in (1..50)) {
+                    Invoke-Expression "try{```$script:Status`$(`$num)Button.ResetForeColor()} catch{}"
+                }
+                if (`$This.BackColor -eq 'GreenYellow' ) { `$This.ForeColor = 'Red' }
+                elseif (`$This.BackColor -eq 'Red' ) { `$This.ForeColor = 'Yellow' }
+                else { `$This.ForeColor = 'Yellow' }
+
                 `$script:PopQuizAnswerTextBox.focus()
 
                 `$script:CurrentQuestion  = `$script:PopQuizPool[$script:InCrementQ - 1]
@@ -194,12 +202,11 @@ Which `$(`$script:Question.CommandType) does the following?
 
                 if (-not `$script:GradedTest) { Update-MultipleChoice }
 
-
                 # Highlights the correct answer within the multiple choice section
                 if (`$script:GradedTest) {
                     `$script:PopQuizMultipleChoiceCheckBox.Enabled   = `$true
                     `$script:PopQuizMultipleChoiceCheckBox.checked   = `$true
-                    `$script:PopQuizMultipleChoiceCheckBox.ForeColor = 'red'
+                    #`$script:PopQuizMultipleChoiceCheckBox.ForeColor = 'red'
                     Update-MultipleChoice
 
                     `$script:PopQuizMultipleChoiceCheckBox.Enabled     = `$false
@@ -210,53 +217,46 @@ Which `$(`$script:Question.CommandType) does the following?
                     `$script:PopQuizMultipleChoice5RadioButton.Enabled = `$False
                     `$script:PopQuizMultipleChoice6RadioButton.Enabled = `$False
                         
-
-
-    
                     `$script:CurrentQuestionList = `$Script:RandomQuestion$($script:InCrementQ)List
-                    #foreach (`$q in `$script:CurrentQuestionList){
-                        `$q | ogv
-                        if (`$script:PopQuizMultipleChoice1RadioButton.text -eq "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){
-                            `$script:PopQuizMultipleChoice1RadioButton.ForeColor = 'Black'
-                            `$script:PopQuizMultipleChoice1RadioButton.BackColor = 'LightGreen'
-                        }
-                        if (`$script:PopQuizMultipleChoice2RadioButton.text -eq "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){
-                            `$script:PopQuizMultipleChoice2RadioButton.ForeColor = 'Black'
-                            `$script:PopQuizMultipleChoice2RadioButton.BackColor = 'LightGreen'
-                        }
-                        if (`$script:PopQuizMultipleChoice3RadioButton.text -eq "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){    
-                            `$script:PopQuizMultipleChoice3RadioButton.ForeColor = 'Black'
-                            `$script:PopQuizMultipleChoice3RadioButton.BackColor = 'LightGreen'
-                        }
-                        if (`$script:PopQuizMultipleChoice4RadioButton.text -eq "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){
-                            `$script:PopQuizMultipleChoice4RadioButton.ForeColor = 'Black'
-                            `$script:PopQuizMultipleChoice4RadioButton.BackColor = 'LightGreen'
-                        }
-                        if (`$script:PopQuizMultipleChoice5RadioButton.text -eq "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){
-                            `$script:PopQuizMultipleChoice5RadioButton.ForeColor = 'Black'
-                            `$script:PopQuizMultipleChoice5RadioButton.BackColor = 'LightGreen'
-                        }
-                        if (`$script:PopQuizMultipleChoice6RadioButton.text -eq "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){
-                            `$script:PopQuizMultipleChoice6RadioButton.ForeColor = 'Black'
-                            `$script:PopQuizMultipleChoice6RadioButton.BackColor = 'LightGreen'
-                        }
+                    if (`$script:PopQuizMultipleChoice1RadioButton.text -eq "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){
+                        `$script:PopQuizMultipleChoice1RadioButton.ForeColor = 'Black'
+                        `$script:PopQuizMultipleChoice1RadioButton.BackColor = 'GreenYellow'
+                    }
+                    if (`$script:PopQuizMultipleChoice2RadioButton.text -eq "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){
+                        `$script:PopQuizMultipleChoice2RadioButton.ForeColor = 'Black'
+                        `$script:PopQuizMultipleChoice2RadioButton.BackColor = 'GreenYellow'
+                    }
+                    if (`$script:PopQuizMultipleChoice3RadioButton.text -eq "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){    
+                        `$script:PopQuizMultipleChoice3RadioButton.ForeColor = 'Black'
+                        `$script:PopQuizMultipleChoice3RadioButton.BackColor = 'GreenYellow'
+                    }
+                    if (`$script:PopQuizMultipleChoice4RadioButton.text -eq "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){
+                        `$script:PopQuizMultipleChoice4RadioButton.ForeColor = 'Black'
+                        `$script:PopQuizMultipleChoice4RadioButton.BackColor = 'GreenYellow'
+                    }
+                    if (`$script:PopQuizMultipleChoice5RadioButton.text -eq "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){
+                        `$script:PopQuizMultipleChoice5RadioButton.ForeColor = 'Black'
+                        `$script:PopQuizMultipleChoice5RadioButton.BackColor = 'GreenYellow'
+                    }
+                    if (`$script:PopQuizMultipleChoice6RadioButton.text -eq "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){
+                        `$script:PopQuizMultipleChoice6RadioButton.ForeColor = 'Black'
+                        `$script:PopQuizMultipleChoice6RadioButton.BackColor = 'GreenYellow'
+                    }
 
-                        if (`$script:PopQuizMultipleChoice1RadioButton.text -ne "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){`$script:PopQuizMultipleChoice1RadioButton.ResetBackColor()}
-                        if (`$script:PopQuizMultipleChoice2RadioButton.text -ne "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){`$script:PopQuizMultipleChoice2RadioButton.ResetBackColor()}
-                        if (`$script:PopQuizMultipleChoice3RadioButton.text -ne "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){`$script:PopQuizMultipleChoice3RadioButton.ResetBackColor()}
-                        if (`$script:PopQuizMultipleChoice4RadioButton.text -ne "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){`$script:PopQuizMultipleChoice4RadioButton.ResetBackColor()}
-                        if (`$script:PopQuizMultipleChoice5RadioButton.text -ne "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){`$script:PopQuizMultipleChoice5RadioButton.ResetBackColor()}
-                        if (`$script:PopQuizMultipleChoice6RadioButton.text -ne "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){`$script:PopQuizMultipleChoice6RadioButton.ResetBackColor()}                        
-                    #}
-                
-                        
-
+                    if (`$script:PopQuizMultipleChoice1RadioButton.text -ne "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){`$script:PopQuizMultipleChoice1RadioButton.ResetBackColor()}
+                    if (`$script:PopQuizMultipleChoice2RadioButton.text -ne "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){`$script:PopQuizMultipleChoice2RadioButton.ResetBackColor()}
+                    if (`$script:PopQuizMultipleChoice3RadioButton.text -ne "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){`$script:PopQuizMultipleChoice3RadioButton.ResetBackColor()}
+                    if (`$script:PopQuizMultipleChoice4RadioButton.text -ne "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){`$script:PopQuizMultipleChoice4RadioButton.ResetBackColor()}
+                    if (`$script:PopQuizMultipleChoice5RadioButton.text -ne "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){`$script:PopQuizMultipleChoice5RadioButton.ResetBackColor()}
+                    if (`$script:PopQuizMultipleChoice6RadioButton.text -ne "`$(`$script:PopQuizPool[$($script:InCrementQ - 1)].Name)"){`$script:PopQuizMultipleChoice6RadioButton.ResetBackColor()}                                
                 }                
             }
         }
         `$StatusGroupBox.Controls.Remove(`$script:Status$($script:InCrementQ)Button)
         `$StatusGroupBox.Controls.Add(`$script:Status$($script:InCrementQ)Button)
         `$script:IncrementX += 32
+
+        CommonButtonSettings -Button `$script:Status$($script:InCrementQ)Button
 "@
         # Counts 10 buttons per row, then starts a new one
         if ($script:InCrementQ % 10 -eq 0) {
@@ -287,6 +287,7 @@ Which $($script:Question.CommandType) does the following?
 
     $PopQuizAnswerGroupBox.Controls.Add($PopQuizManualEntrySubmitButton)
     $script:PopQuizMultipleChoiceGroupBox.Controls.Add($script:PopQuizMultipleChoiceSubmitButton)
+    $script:PopQuizMultipleChoiceSubmitButton.BringToFront()
     $PopQuizHelpButton.Enabled = $true
     $script:PopQuizAnswerTextBox.Enabled = $true
     $PopQuizManualEntrySubmitButton.Enabled = $true
@@ -294,6 +295,8 @@ Which $($script:Question.CommandType) does the following?
     $PopQuizGradeButton.Enabled = $true
     $script:PopQuizMultipleChoiceCheckBox.Enabled = $true
     $PopQuizMultipleChoiceStayCheckCheckBox.Enabled = $true
+    $PreviousQuestionButton.Enabled = $true
+    $NextQuestionButton.Enabled = $true
 
     $script:PopQuizMultipleChoice1RadioButton.ResetBackColor()
     $script:PopQuizMultipleChoice2RadioButton.ResetBackColor()
@@ -301,7 +304,20 @@ Which $($script:Question.CommandType) does the following?
     $script:PopQuizMultipleChoice4RadioButton.ResetBackColor()
     $script:PopQuizMultipleChoice5RadioButton.ResetBackColor()
     $script:PopQuizMultipleChoice6RadioButton.ResetBackColor()
+}
 
+
+function CommonButtonSettings {
+    param($Button)
+    $Button.Font      = New-Object System.Drawing.Font('Arial',11,0,0,0)
+    $Button.ForeColor = "Black"
+    $Button.Flatstyle = 'Flat'
+    $Button.UseVisualStyleBackColor = $true
+    #$Button.FlatAppearance.BorderSize        = 1
+    $Button.BackColor = 'LightGray'
+    $Button.FlatAppearance.BorderColor        = [System.Drawing.Color]::Gray
+    $Button.FlatAppearance.MouseDownBackColor = [System.Drawing.Color]::DimGray
+    $Button.FlatAppearance.MouseOverBackColor = [System.Drawing.Color]::DarkGray
 }
 
 
@@ -379,6 +395,7 @@ $ModuleClearSelectionButton = New-Object -TypeName System.Windows.Forms.Button -
     }
 }
 $PoShPopQuiz.Controls.Add($ModuleClearSelectionButton)
+CommonButtonSettings -Button $ModuleClearSelectionButton
 
 
 
@@ -393,6 +410,7 @@ $ModuleSelectAllButton = New-Object -TypeName System.Windows.Forms.Button -Prope
     }
 }
 $PoShPopQuiz.Controls.Add($ModuleSelectAllButton)
+CommonButtonSettings -Button $ModuleSelectAllButton
 
 
 
@@ -458,14 +476,62 @@ $PopQuizGenerateButton = New-Object -TypeName System.Windows.Forms.Button -Prope
     }
 }
 $PoShPopQuiz.Controls.Add($PopQuizGenerateButton)
+CommonButtonSettings -Button $PopQuizGenerateButton
+
+
+
+$PopQuizQuestionGroupBox = New-Object -TypeName System.Windows.Forms.GroupBox -Property @{
+    Text = "Question:"
+    Location = @{ X = $ModuleCheckListBox.Location.X + $ModuleCheckListBox.Size.Width + 5
+                  Y = $ModuleCheckListBox.Location.Y }
+    Size     = @{ Width  = 700
+                  Height = 300 }
+    ForeColor = 'Blue'
+}
+$PoShPopQuiz.Controls.Add($PopQuizQuestionGroupBox)
+
+
+
+$PopQuizQuestionRichTextBox = New-Object -TypeName System.Windows.Forms.RichTextBox -Property @{
+    Location = @{ X = 10 
+                  Y = 20 }
+    Size     = @{ Width  = 680
+                  Height = 270 }
+    ReadOnly = $True
+    WordWrap = $True
+    Multiline = $True
+    Font = New-Object System.Drawing.Font("Courier New",11,0,0,0)
+}
+$PopQuizQuestionGroupBox.Controls.Add($PopQuizQuestionRichTextBox)
+
+
+
+$script:QuestionPointLabel = New-Object -TypeName System.Windows.Forms.Label -Property @{
+    Text = "Question Value:"
+    Location = @{ X = $PopQuizQuestionGroupBox.Location.X + 8
+                  Y = $PopQuizQuestionGroupBox.Location.Y + $PopQuizQuestionGroupBox.Size.Height + 10 }
+    Size     = @{ Width  = 97
+                  Height = 22 }
+}
+$PoShPopQuiz.Controls.Add($script:QuestionPointLabel)
+
+
+$script:QuestionPointValueLabel = New-Object -TypeName System.Windows.Forms.Label -Property @{
+    Text = "2.0"
+    Location = @{ X = $script:QuestionPointLabel.Location.X + $script:QuestionPointLabel.Size.Width
+                  Y = $script:QuestionPointLabel.Location.Y }
+    Size     = @{ Width  = 50
+                  Height = 22 }
+}
+$PoShPopQuiz.Controls.Add($script:QuestionPointValueLabel)
 
 
 
 $PopQuizHelpButton = New-Object -TypeName System.Windows.Forms.Button -Property @{
     Text = "Hint"
-    Location = @{ X = $ModuleCheckListBox.Location.X + $ModuleCheckListBox.Size.Width + 5
-                  Y = $ModuleCheckListBox.Location.Y }
-    Size     = @{ Width  = 75
+    Location = @{ X = $QuestionPointValueLabel.Location.X + $QuestionPointValueLabel.Size.Height + 113
+                  Y = $QuestionPointValueLabel.Location.Y - 5 }
+    Size     = @{ Width  = 100
                   Height = 22 }
     Enabled = $false
     Add_Click = {
@@ -489,58 +555,14 @@ $PopQuizHelpButton = New-Object -TypeName System.Windows.Forms.Button -Property 
     }
 }
 $PoShPopQuiz.Controls.Add($PopQuizHelpButton)
-
-
-$script:QuestionPointLabel = New-Object -TypeName System.Windows.Forms.Label -Property @{
-    Text = "Question Value:"
-    Location = @{ X = $PopQuizHelpButton.Location.X + $PopQuizHelpButton.Size.Width + 5
-                  Y = $PopQuizHelpButton.Location.Y }
-    Size     = @{ Width  = 100
-                  Height = 22 }
-}
-$PoShPopQuiz.Controls.Add($script:QuestionPointLabel)
-
-
-$script:QuestionPointValueLabel = New-Object -TypeName System.Windows.Forms.Label -Property @{
-    Text = "2.0"
-    Location = @{ X = $script:QuestionPointLabel.Location.X + $script:QuestionPointLabel.Size.Width
-                  Y = $script:QuestionPointLabel.Location.Y }
-    Size     = @{ Width  = 50
-                  Height = 22 }
-}
-$PoShPopQuiz.Controls.Add($script:QuestionPointValueLabel)
-
-
-$PopQuizQuestionGroupBox = New-Object -TypeName System.Windows.Forms.GroupBox -Property @{
-    Text = "Question:"
-    Location = @{ X = $PopQuizHelpButton.Location.X 
-                  Y = $PopQuizHelpButton.Location.Y + $PopQuizHelpButton.Size.Height + 5}
-    Size     = @{ Width  = 700
-                  Height = 300 }
-    ForeColor = 'Blue'
-}
-$PoShPopQuiz.Controls.Add($PopQuizQuestionGroupBox)
-
-
-
-$PopQuizQuestionRichTextBox = New-Object -TypeName System.Windows.Forms.RichTextBox -Property @{
-    Location = @{ X = 10 
-                  Y = 20 }
-    Size     = @{ Width  = 680
-                  Height = 270 }
-    ReadOnly = $True
-    WordWrap = $True
-    Multiline = $True
-    Font = New-Object System.Drawing.Font("Courier New",11,0,0,0)
-}
-$PopQuizQuestionGroupBox.Controls.Add($PopQuizQuestionRichTextBox)
+CommonButtonSettings -Button $PopQuizHelpButton
 
 
 
 $PopQuizAnswerGroupBox = New-Object -TypeName System.Windows.Forms.GroupBox -Property @{
     Text = "Type In Command: #0"
-    Location = @{ X = $PopQuizQuestionGroupBox.Location.X 
-                  Y = $PopQuizQuestionGroupBox.Location.Y + $PopQuizQuestionGroupBox.Size.Height + 5 }
+    Location = @{ X = $QuestionPointLabel.Location.X - 8
+                  Y = $QuestionPointLabel.Location.Y + $QuestionPointLabel.Size.Height }
     Size     = @{ Width  = 350
                   Height = 50 }
     ForeColor = 'Blue'
@@ -548,10 +570,9 @@ $PopQuizAnswerGroupBox = New-Object -TypeName System.Windows.Forms.GroupBox -Pro
 $PoShPopQuiz.Controls.Add($PopQuizAnswerGroupBox)
 
 
-
 function Previous-Question {
     $num = [int]$script:CurrentAnswerNum - 1
-    if ($num -gt 1) {
+    if ($num -gt 0) {
         Invoke-Expression "`$script:Status$($num)Button.PerformClick()"
     }
 }
@@ -608,6 +629,35 @@ $PopQuizManualEntrySubmitButton = New-Object -TypeName System.Windows.Forms.Butt
     Add_Click = { Submit-ManualEntryAnswer }
 }
 $PopQuizAnswerGroupBox.Controls.Add($PopQuizManualEntrySubmitButton)
+CommonButtonSettings -Button $PopQuizManualEntrySubmitButton
+
+
+
+$PreviousQuestionButton = New-Object -TypeName System.Windows.Forms.Button -Property @{
+    Text = "<-- Previous Question"
+    Location = @{ X = $PopQuizAnswerGroupBox.Location.X + $PopQuizAnswerGroupBox.Size.Width + 10
+                  Y = $PopQuizAnswerGroupBox.Location.Y - 27 }
+    Size     = @{ Width  = 150
+                  Height = 22 }
+    Enabled = $false
+    Add_Click = { Previous-Question }
+}
+$PoShPopQuiz.Controls.Add($PreviousQuestionButton)
+CommonButtonSettings -Button $PreviousQuestionButton
+
+
+
+$NextQuestionButton = New-Object -TypeName System.Windows.Forms.Button -Property @{
+    Text = "Next Question -->"
+    Location = @{ X = $PreviousQuestionButton.Location.X + $PreviousQuestionButton.Size.Width + 39
+                  Y = $PreviousQuestionButton.Location.Y }
+    Size     = @{ Width  = 150
+                  Height = 22 }
+    Enabled = $false
+    Add_Click = { Next-Question }
+}
+$PoShPopQuiz.Controls.Add($NextQuestionButton)
+CommonButtonSettings -Button $NextQuestionButton
 
 
 
@@ -660,7 +710,7 @@ $PopQuizGradeButton = New-Object -TypeName System.Windows.Forms.Button -Property
         $CompletedQuiz = $true
         foreach ($i in (1..$($script:NumberOfQuestionsComboBox.SelectedItem))) { 
             $Button = Invoke-Expression "`$script:Status$($i)Button"
-            if ( $Button.BackColor -ne 'LightBlue' -and $Button.BackColor -ne 'LightGreen' -and $Button.BackColor -ne 'Red' ) {
+            if ( $Button.BackColor -ne 'LightBlue' -and $Button.BackColor -ne 'GreenYellow' -and $Button.BackColor -ne 'Red' ) {
                 [System.Windows.MessageBox]::Show("You have unanswered questions...")
                 $CompletedQuiz = $false
                 break
@@ -675,7 +725,7 @@ $PopQuizGradeButton = New-Object -TypeName System.Windows.Forms.Button -Property
                 if ("$($script:PopQuizPool[$NumberOfQ].Name)" -eq  "$($script:Answers[$NumberOfQ])") {
                     [double]$Grade += [double]$score
                     Invoke-Expression @"
-                       `$script:Status$($NumberOfQ+1)Button.BackColor = 'LightGreen'
+                       `$script:Status$($NumberOfQ+1)Button.BackColor = 'GreenYellow'
 "@
                     $NumberCorrect += 1
                 }
@@ -701,6 +751,8 @@ $PopQuizGradeButton = New-Object -TypeName System.Windows.Forms.Button -Property
     }
 }
 $PopQuizAnswerSubmittedGroupBox.Controls.Add($PopQuizGradeButton)
+CommonButtonSettings -Button $PopQuizGradeButton
+
 
 function Update-MultipleChoice {
     if ($script:PopQuizMultipleChoiceCheckBox.checked){
@@ -854,6 +906,8 @@ $script:PopQuizMultipleChoiceSubmitButton = New-Object -TypeName System.Windows.
     Add_Click = { Submit-MultipleChoiceAnswer }
 }
 $script:PopQuizMultipleChoiceGroupBox.Controls.Add($script:PopQuizMultipleChoiceSubmitButton)
+CommonButtonSettings -Button $script:PopQuizMultipleChoiceSubmitButton
+
 
 
 $script:PopQuizMultipleChoice1RadioButton = New-Object -TypeName System.Windows.Forms.RadioButton -Property @{
